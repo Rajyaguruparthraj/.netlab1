@@ -1,0 +1,83 @@
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+        List<double> expenses = new List<double>();
+        int choice;
+
+        do
+        {
+            Console.WriteLine("\n===== Expense Tracking Module =====");
+            Console.WriteLine("1. Add Expense");
+            Console.WriteLine("2. View Expenses");
+            Console.WriteLine("3. View Total Expense");
+            Console.WriteLine("4. Exit");
+            Console.Write("Enter your choice: ");
+
+            try
+            {
+                choice = Convert.ToInt32(Console.ReadLine());
+
+                switch (choice)
+                {
+                    case 1:
+                        Console.Write("Enter Expense Amount: ");
+                        double amount = Convert.ToDouble(Console.ReadLine());
+
+                        if (amount < 0)
+                            throw new Exception("Expense cannot be negative.");
+
+                        expenses.Add(amount);
+                        Console.WriteLine("Expense Added Successfully.");
+                        break;
+
+                    case 2:
+                        Console.WriteLine("\nExpenses:");
+                        if (expenses.Count == 0)
+                        {
+                            Console.WriteLine("No expenses found.");
+                        }
+                        else
+                        {
+                            foreach (double exp in expenses)
+                            {
+                                Console.WriteLine(exp);
+                            }
+                        }
+                        break;
+
+                    case 3:
+                        double total = 0;
+                        foreach (double exp in expenses)
+                        {
+                            total += exp;
+                        }
+                        Console.WriteLine("Total Expense = " + total);
+                        break;
+
+                    case 4:
+                        Console.WriteLine("Thank You!");
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid Choice.");
+                        break;
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Please enter a valid number.");
+                choice = 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                choice = 0;
+            }
+
+        } while (choice != 4);
+    }
+}
