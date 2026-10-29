@@ -1,0 +1,311 @@
+Source: default.aspx Code: 
+#Program.CS 
+var builder = WebApplication.CreateBuilder(args); 
+ 
+// Register MVC views and controllers builder.Services.AddControllersWithViews(); 
+ 
+var app = builder.Build(); 
+ 
+// Configure HTTP pipeline 
+if (!app.Environment.IsDevelopment()) 
+{ 
+    app.UseExceptionHandler("/Home/Error");     app.UseHsts(); 
+}  
+app.UseHttpsRedirection(); 
+app.UseStaticFiles(); // Allows serving CSS/JS libraries from wwwroot 
+ 
+app.UseRouting(); app.UseAuthorization(); 
+ 
+// Route pattern directing startup to FeedbackController -> Index Action app.MapControllerRoute(     name: "default", 
+    pattern: "{controller=Feedback}/{action=Index}/{id?}"); 
+ app.Run();  
+#Create.html 
+@model FeedbackModule.Models.FeedbackModel 
+ 
+@{ 
+    Layout = "_Layout"; 
+    ViewBag.Title = "Submit Feedback"; 
+} 
+ 
+<div class="row justify-content-center"> 
+    <div class="col-md-8"> 
+        <div class="card shadow-sm border-0"> 
+            <div class="card-header bg-white py-3 border-bottom"> 
+                <h4 class="card-title fw-bold mb-0 text-primary">Submit New 
+Feedback</h4> 
+            </div> 
+            <div class="card-body p-4"> 
+                <!-- Renders the Form Partial View asynchronously --> 
+                @await Html.PartialAsync("_FeedbackFormPartial", Model)             </div> 
+        </div> 
+    </div> 
+</div> 
+ 
+ 
+ 
+#index.html 
+@model IEnumerable<FeedbackModule.Models.FeedbackModel> 
+ 
+@{ 
+    Layout = "_Layout"; 
+    ViewBag.Title = "Feedback Dashboard"; 
+} 
+ 
+<div class="d-flex justify-content-between align-items-center mb-4"> 
+    <h2 class="fw-bold mb-0">Feedback Dashboard</h2> 
+    <a href="@Url.Action("Create", "Feedback")" class="btn btn-success">+ Submit 
+New Feedback</a> 
+</div> 
+ 
+<!-- Displays success message after redirection from form submission --> @if (TempData["SuccessMessage"] != null) 
+{ 
+    <div class="alert alert-success alert-dismissible fade show" role="alert"> 
+        @TempData["SuccessMessage"] 
+        <button type="button" class="btn-close" data-bs-dismiss="alert" arialabel="Close"></button> 
+    </div> 
+} 
+ 
+<!-- Renders the List Partial View asynchronously --> 
+@await Html.PartialAsync("_FeedbackListPartial", Model) 
+ 
+#_FeedbackistPartial.cshtml 
+@model IEnumerable<FeedbackModule.Models.FeedbackModel> 
+ 
+<div class="row g-3"> 
+    @if (!Model.Any()) 
+    { 
+        <div class="alert alert-info">No feedback entries found. Be the first to leave a review!</div> 
+    }     else 
+    { 
+        @foreach (var item in Model) 
+        { 
+            <div class="col-md-6"> 
+                <div class="card h-100 shadow-sm border-0"> 
+                    <div class="card-body"> 
+                        <div class="d-flex justify-content-between align-itemscenter mb-2"> 
+                            <span class="badge bg-primary">@item.Category</span> 
+                            <small class="text-
+muted">@item.SubmittedDate.ToString("yyyy-MM-dd HH:mm")</small> 
+                        </div> 
+                        <h5 class="card-title fw-bold text-dark mb-
+1">@item.UserName</h5> 
+                        <p class="text-warning mb-2">Rating: 
+<strong>@item.Rating / 5 Stars</strong></p> 
+                        <p class="card-text text-secondary">@item.Comments</p> 
+                    </div> 
+                </div> 
+            </div> 
+        } 
+    } 
+</div> 
+ 
+ 
+ 
+ 
+ 
+ 
+#_FeedbackFromtPartial.cshtml 
+@model FeedbackModule.Models.FeedbackModel 
+ 
+@using (Html.BeginForm("Create", "Feedback", FormMethod.Post)) { 
+    <!-- CSRF Protection Token --> 
+    @Html.AntiForgeryToken() 
+ 
+    <!-- Displays overall form errors if any model-level validation fails -->     @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })  
+    <!-- Full Name Input --> 
+    <div class="mb-3"> 
+        @Html.LabelFor(m => m.UserName, new { @class = "form-label fw-bold" }) 
+        @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", placeholder = "Enter full name" }) 
+        @Html.ValidationMessageFor(m => m.UserName, "", new { @class = "textdanger small" }) 
+    </div> 
+ 
+    <!-- Email Address Input --> 
+    <div class="mb-3"> 
+        @Html.LabelFor(m => m.Email, new { @class = "form-label fw-bold" }) 
+        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = 
+"email", placeholder = "name@example.com" }) 
+        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })     </div> 
+ 
+    <div class="row"> 
+        <!-- Category Dropdown --> 
+        <div class="col-md-6 mb-3"> 
+            @Html.LabelFor(m => m.Category, new { @class = "form-label fw-bold" }) 
+            @Html.DropDownListFor(m => m.Category, new SelectList(new[] { 
+            "General Feedback", "Bug Report", "Feature Request", "UI/UX 
+Improvement" 
+                }), "-- Select Category --", new { @class = "form-select" }) 
+        @Html.ValidationMessageFor(m => m.Category, "", new { @class = "textdanger small" }) 
+    </div> 
+ 
+    <!-- Rating Dropdown --> 
+    <div class="col-md-6 mb-3"> 
+        @Html.LabelFor(m => m.Rating, new { @class = "form-label fw-bold" }) 
+        @Html.DropDownListFor(m => m.Rating, new SelectList(new[] { 1, 2, 3, 4, 
+5 }), "-- Select Rating (1-5) --", new { @class = "form-select" }) 
+        @Html.ValidationMessageFor(m => m.Rating, "", new { @class = "textdanger small" }) 
+    </div> 
+</div> 
+ 
+<!-- Comments TextArea --> 
+<div class="mb-3"> 
+    @Html.LabelFor(m => m.Comments, new { @class = "form-label fw-bold" }) 
+    @Html.TextAreaFor(m => m.Comments, new { @class = "form-control", rows = 
+"4", placeholder = "Write detailed feedback..." }) 
+    @Html.ValidationMessageFor(m => m.Comments, "", new { @class = "text-danger small" }) 
+</div> 
+ 
+<!-- Action Buttons --> 
+<button type="submit" class="btn btn-primary">Submit Feedback</button> 
+<a href="@Url.Action("Index", "Feedback")" class="btn btn-outline-secondary ms2">Cancel</a> 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+#_Layout.cshtml 
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="utf-8" /> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+    <!-- Dynamic page title supplied by child views --> 
+    <title>@ViewBag.Title - Feedback Portal</title> 
+ 
+    <!-- Bootstrap 5 CSS for UI styling --> 
+    <link rel="stylesheet" 
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" /> 
+</head> 
+<body class="bg-light"> 
+ 
+    <!-- Navigation Header --> 
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm"> 
+        <div class="container"> 
+            <a class="navbar-brand fw-bold" href="@Url.Action("Index", 
+"Feedback")">Feedback Module</a> 
+            <div class="navbar-nav ms-auto"> 
+                <a class="nav-link text-white" href="@Url.Action("Index", "Feedback")">Dashboard</a> 
+                <a class="nav-link text-white" href="@Url.Action("Create", 
+"Feedback")">Submit Feedback</a> 
+            </div> 
+        </div> 
+    </nav> 
+ 
+    <!-- Content Placeholder where parent views render --> 
+    <main class="container"> 
+        @RenderBody() 
+    </main> 
+ 
+    <!-- Core Scripts --> 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    <script 
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.j s"></script> 
+ 
+    <!-- Validation Scripts (Required for unobtrusive client-side validation) -> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryvalidate/1.19.5/jquery.validate.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validationunobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script> 
+ 
+    <!-- Optional script section for view-specific JavaScript --> 
+    @RenderSection("Scripts", required: false) 
+</body> 
+</html> 
+ 
+ 
+ 
+ 
+#FeedbackController.cs using System; 
+using System.Collections.Generic; using System.Linq; using Microsoft.AspNetCore.Mvc; using FeedbackModule.Models; 
+ 
+namespace FeedbackModule.Controllers 
+{ 
+    public class FeedbackController : Controller 
+    { 
+        // Static in-memory collection simulating database records         private static readonly List<FeedbackModel> FeedbackList = new 
+List<FeedbackModel> 
+        { 
+            new FeedbackModel 
+            { 
+                Id = 1, 
+                UserName = "Jane Doe", 
+                Email = "jane@example.com", 
+                Category = "UI/UX", 
+                Rating = 5, 
+                Comments = "The user interface is clean and easy to navigate!", 
+                SubmittedDate = DateTime.Now.AddDays(-1) 
+            } 
+        }; 
+ 
+        // GET: /Feedback/Index 
+        [HttpGet] 
+        public IActionResult Index() 
+        { 
+            var orderedList = FeedbackList.OrderByDescending(f => f.SubmittedDate).ToList(); 
+            return View(orderedList); 
+        } 
+ 
+        // GET: /Feedback/Create 
+        [HttpGet] 
+        public IActionResult Create() 
+        { 
+            return View(new FeedbackModel()); 
+        } 
+ 
+        // POST: /Feedback/Create 
+        [HttpPost] 
+        [ValidateAntiForgeryToken] 
+        public IActionResult Create(FeedbackModel model) 
+        { 
+            // Server-side validation check             if (!ModelState.IsValid) 
+            { 
+                return View(model); 
+            } 
+             model.Id = FeedbackList.Count + 1;             model.SubmittedDate = DateTime.Now; 
+            FeedbackList.Add(model); 
+ 
+            TempData["SuccessMessage"] = "Feedback submitted successfully!";             return RedirectToAction("Index"); 
+        } 
+    } 
+} 
+ 
+ 
+ 
+ 
+ 
+#FeedbackModel.cs using System; 
+using System.ComponentModel.DataAnnotations; 
+ 
+namespace FeedbackModule.Models 
+{ 
+    public class FeedbackModel 
+    { 
+        public int Id { get; set; } 
+ 
+        [Required(ErrorMessage = "Full Name is required.")] 
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 50 characters.")]         [Display(Name = "Full Name")]         public string UserName { get; set; } 
+ 
+        [Required(ErrorMessage = "Email Address is required.")] 
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")] 
+        [Display(Name = "Email Address")]         public string Email { get; set; } 
+ 
+        [Required(ErrorMessage = "Please select a Category.")] 
+        [Display(Name = "Category")]         public string Category { get; set; } 
+ 
+        [Required(ErrorMessage = "Please select a Rating.")] 
+        [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")] 
+        [Display(Name = "Rating")]         public int Rating { get; set; } 
+ 
+        [Required(ErrorMessage = "Comments cannot be empty.")] 
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Comments must be between 10 and 500 characters.")]         [Display(Name = "Comments")] 
+        public string Comments { get; set; } 
+ 
+        public DateTime SubmittedDate { get; set; } = DateTime.Now;     } } 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
